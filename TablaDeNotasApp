@@ -1,0 +1,118 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TablaDeNotasApp extends JFrame {
+    private List<Estudiante> estudiantes;
+    private JTextArea displayArea;
+
+    public TablaDeNotasApp() {
+        estudiantes = new ArrayList<>();
+        displayArea = new JTextArea(20, 40);
+        displayArea.setEditable(false);
+
+        setTitle("Tabla de Notas de Estudiantes");
+        setSize(600, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        JPanel buttonPanel = new JPanel();
+        JButton addStudentButton = new JButton("Añadir Estudiante");
+        JButton viewTableButton = new JButton("Ver Tabla de Notas");
+
+        addStudentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addStudent();
+            }
+        });
+
+        viewTableButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displayTable();
+            }
+        });
+
+        buttonPanel.add(addStudentButton);
+        buttonPanel.add(viewTableButton);
+
+        add(new JScrollPane(displayArea), BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    private void addStudent() {
+        String nombre = JOptionPane.showInputDialog(this, "Introduce el nombre del estudiante:");
+        if (nombre != null && !nombre.trim().isEmpty()) {
+            String nota1Str = JOptionPane.showInputDialog(this, "Introduce la Nota 1:");
+            String nota2Str = JOptionPane.showInputDialog(this, "Introduce la Nota 2:");
+            if (nota1Str != null && nota2Str != null) {
+                try {
+                    double nota1 = Double.parseDouble(nota1Str);
+                    double nota2 = Double.parseDouble(nota2Str);
+                    estudiantes.add(new Estudiante(nombre, nota1, nota2));
+                    JOptionPane.showMessageDialog(this, "Estudiante añadido.");
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Por favor, introduce notas válidas.");
+                }
+            }
+        }
+    }
+
+    private void displayTable() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("%-10s %-10s %-10s %-10s\n", "Estudiante", "Nota 1", "Nota 2", "Promedio"));
+        for (Estudiante estudiante : estudiantes) {
+            double promedio = (estudiante.getNota1() + estudiante.getNota2()) / 2;
+            sb.append(String.format("%-10s %-10.2f %-10.2f %-10.2f\n", estudiante.getNombre(), estudiante.getNota1(), estudiante.getNota2(), promedio));
+        }
+        displayArea.setText(sb.toString());
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            setLookAndFeel();
+            new TablaDeNotasApp().setVisible(true);
+        });
+    }
+
+    private static void setLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.put("Panel.background", new Color(135, 206, 235)); // Sky blue color
+            UIManager.put("Button.background", new Color(70, 130, 180)); // Steel blue color
+            UIManager.put("Button.foreground", Color.WHITE);
+            UIManager.put("TextArea.background", new Color(176, 224, 230)); // Powder blue color
+            UIManager.put("TextArea.foreground", Color.BLACK);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Estudiante {
+    private String nombre;
+    private double nota1;
+    private double nota2;
+
+    public Estudiante(String nombre, double nota1, double nota2) {
+        this.nombre = nombre;
+        this.nota1 = nota1;
+        this.nota2 = nota2;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public double getNota1() {
+        return nota1;
+    }
+
+    public double getNota2() {
+        return nota2;
+    }
+}
