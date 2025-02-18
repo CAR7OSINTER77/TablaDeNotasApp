@@ -1,0 +1,235 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+public class InterProgramColor {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            setLookAndFeel();
+            new ECommerceApp().setVisible(true);
+        });
+    }
+
+    private static void setLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.put("Panel.background", new Color(135, 206, 235)); // Sky blue color
+            UIManager.put("Button.background", new Color(70, 130, 180)); // Steel blue color
+            UIManager.put("Button.foreground", Color.WHITE);
+            UIManager.put("TextArea.background", new Color(176, 224, 230)); // Powder blue color
+            UIManager.put("TextArea.foreground", Color.BLACK);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class ECommerceApp extends JFrame {
+    private Inventory inventory;
+    private ShoppingCart cart;
+    private JTextArea displayArea;
+
+    public ECommerceApp() {
+        inventory = new Inventory();
+        cart = new ShoppingCart();
+        displayArea = new JTextArea(20, 40);
+        displayArea.setEditable(false);
+
+        // Añadir algunos productos al inventario
+        inventory.addProduct(new Product("Laptop", 999.99, 10));
+        inventory.addProduct(new Product("Smartphone", 699.99, 15));
+        inventory.addProduct(new Product("Tablet", 399.99, 20));
+
+        setTitle("Tienda de Comercio Electrónico");
+        setSize(500, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        JPanel buttonPanel = new JPanel();
+        JButton viewProductsButton = new JButton("Ver Productos");
+        JButton addProductButton = new JButton("Añadir Producto");
+        JButton removeProductButton = new JButton("Eliminar Producto");
+        JButton viewCartButton = new JButton("Ver Carrito");
+
+        viewProductsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displayProducts();
+            }
+        });
+
+        addProductButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addProductToCart();
+            }
+        });
+
+        removeProductButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                removeProductFromCart();
+            }
+        });
+
+        viewCartButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displayCart();
+            }
+        });
+
+        buttonPanel.add(viewProductsButton);
+        buttonPanel.add(addProductButton);
+        buttonPanel.add(removeProductButton);
+        buttonPanel.add(viewCartButton);
+
+        add(new JScrollPane(displayArea), BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    private void displayProducts() {
+        StringBuilder sb = new StringBuilder("Productos disponibles:\n");
+        for (Product product : inventory.getProducts()) {
+            sb.append(String.format("ID: %d, Nombre: %s, Precio: $%.2f, Stock: %d\n",
+                    product.getId(), product.getName(), product.getPrice(), product.getStock()));
+        }
+        displayArea.setText(sb.toString());
+    }
+
+    private void addProductToCart() {
+        String productIdStr = JOptionPane.showInputDialog(this, "Introduce el ID del producto:");
+        if (productIdStr != null) {
+            int productId = Integer.parseInt(productIdStr);
+            Product productToAdd = inventory.getProductById(productId);
+            if (productToAdd != null) {
+                cart.addProduct(productToAdd);
+                JOptionPane.showMessageDialog(this, "Producto añadido al carrito.");
+            } else {
+                JOptionPane.showMessageDialog(this, "Producto no encontrado.");
+            }
+        }
+    }
+
+    private void removeProductFromCart() {
+        String productIdStr = JOptionPane.showInputDialog(this, "Introduce el ID del producto a eliminar:");
+        if (productIdStr != null) {
+            int productId = Integer.parseInt(productIdStr);
+            cart.removeProductById(productId);
+            JOptionPane.showMessageDialog(this, "Producto eliminado del carrito.");
+        }
+    }
+
+    private void displayCart() {
+        StringBuilder sb = new StringBuilder("Carrito de compras:\n");
+        double total = 0;
+        for (Product product : cart.getProducts()) {
+            sb.append(String.format("ID: %d, Nombre: %s, Precio: $%.2f\n",
+                    product.getId(), product.getName(), product.getPrice()));
+            total += product.getPrice();
+        }
+        sb.append(String.format("Total: $%.2f\n", total));
+        displayArea.setText(sb.toString());
+    }
+}
+
+class Product {
+    private static int idCounter = 1;
+    private int id;
+    private String name;
+    private double price;
+    private int stock;
+
+    public Product(String name, double price, int stock) {
+        this.id = idCounter++;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void reduceStock() {
+        if (stock > 0) {
+            stock--;
+        }
+    }
+
+    public void increaseStock() {
+        stock++;
+    }
+}
+
+class Inventory {
+    private List<Product> products;
+
+    public Inventory() {
+        products = new ArrayList<>();
+    }
+
+    public void addProduct(Product product) {
+        products.add(product);
+    }
+
+    public Product getProductById(int id) {
+        for (Product product : products) {
+            if (product.getId() == id) {
+                return product;
+            }
+        }
+        return null;
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+}
+
+class ShoppingCart {
+    private List<Product> products;
+
+    public ShoppingCart() {
+        products = new ArrayList<>();
+    }
+
+    public void addProduct(Product product) {
+        if (product.getStock() > 0) {
+            products.add(product);
+            product.reduceStock();
+        } else {
+            System.out.println("Producto fuera de stock.");
+        }
+    }
+
+    public void removeProductById(int id) {
+        for (Product product : products) {
+            if (product.getId() == id) {
+                products.remove(product);
+                product.increaseStock();
+                return;
+            }
+        }
+        System.out.println("Producto no encontrado en el carrito.");
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+}
